@@ -106,7 +106,8 @@ class Client(object):
             'currency': currency
         }
 
-        # TODO use auth param
+        if auth_token:
+            payload['auth_token'] = auth_token
 
         r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers)
         return r.json()
