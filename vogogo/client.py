@@ -27,8 +27,10 @@ class Client(object):
         'accounts': '/accounts',
         'accounts_by_currency': '/accounts?currency=%s',
         'verify': '/accounts/%s/verify',
-        'auth': '/accounts/auth'
-
+        'auth': '/accounts/auth',
+        'transactions': '/transactions',
+        'pay': '/pay',
+        'charge': '/charge'
     }
 
     def __init__(self, client_id, client_secret, bearer_token=None):
@@ -153,3 +155,56 @@ class Client(object):
         r = requests.get(url, headers=self.bearer_headers)
         return r.json()
 
+    @require_bearer_token
+    def get_transactions(self, wallet_id):
+        """
+        This endpoint can be used to get a list of a customer's transactions that are attached to a particular wallet.
+        A wallet_id must be specified.
+        """
+
+        url = urljoin(self.url, self.endpoints['transactions'])
+        payload = {
+            'wallet_id': wallet_id
+        }
+        r = requests.get(url, data=json.dumps(payload), headers=self.bearer_headers)
+        return r.json()
+
+    @require_bearer_token
+    def pay(self, id, account_id, amount, currency, client_ipv4):
+        """
+        Pay a customer.
+        This initiates a financial transaction to move funds from your merchant wallet to a customer's account
+        (wallet or bank account).
+        """
+
+        url = urljoin(self.url, self.endpoints['pay'])
+        payload = {
+            'id': id,
+            'account_id': account_id,
+            'amount': amount,
+            'currency': currency,
+            'client_ipv4': client_ipv4
+        }
+
+        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers)
+        return r.json()
+
+    @require_bearer_token
+    def charge(self, id, account_id, amount, currency, client_ipv4):
+        """
+        Charge a customer.
+        This initiates a financial transaction to move funds from a customer's account
+        (wallet or bank account) to your merchant wallet.
+        """
+
+        url = urljoin(self.url, self.endpoints['charge'])
+        payload = {
+            'id': id,
+            'account_id': account_id,
+            'amount': amount,
+            'currency': currency,
+            'client_ipv4': client_ipv4
+        }
+
+        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers)
+        return r.json()
