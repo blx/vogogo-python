@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name='vogogo',
@@ -7,6 +7,7 @@ setup(
     url='https://github.com/LawnmowerIO/vogogo-python',
     license='MIT',
     author='Pieter Gorsira',
+    packages=find_packages(exclude='tests'),
     package_data={'README': ['README.md']},
     author_email='pgorsira@gmail.com',
     description='Python bindings for Vogogo API',
@@ -23,16 +24,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     keywords='api, client, vogogo',
-    install_requires=[
-        'httplib2>=0.8',
-        'requests>=1.1.0',
-        'oauth2client>=1.1',
-        'python-dateutil>=2.2',
-        'enum34==1.0',
-    ],
-    tests_require=[
-        'sure>=1.2.5',
-        'httpretty>=0.8.0',
-        'mock',
-    ],
+    install_requires=['requests==2.2.1'],
+    zip_safe=False,
+    include_package_data=True,
 )
