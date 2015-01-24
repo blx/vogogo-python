@@ -7,7 +7,6 @@ setup(
     url='https://github.com/LawnmowerIO/vogogo-python',
     license='MIT',
     author='Pieter Gorsira',
-    packages=find_packages(exclude='tests'),
     package_data={'README': ['README.md']},
     author_email='pgorsira@gmail.com',
     description='Python bindings for Vogogo API',
