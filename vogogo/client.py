@@ -5,7 +5,7 @@ import requests
 
 def require_bearer_token(func):
     def inner_func(self, *args, **kwargs):
-        if not self.access_token:
+        if not self.bearer_token:
             raise Exception('`%s` method requires `bearer_token`' %
                             func.__name__)
         return func(self, *args, **kwargs)
