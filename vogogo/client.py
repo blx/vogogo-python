@@ -19,8 +19,6 @@ class Client(object):
     See official documentation at: https://docs.vogogo.com/api
     """
 
-    url = 'https://staging.api.vogogo.com/v2/'  # Base API URL
-
     endpoints = {
         'customers': 'customers',
         'customer': 'customer',
@@ -33,16 +31,19 @@ class Client(object):
         'charge': 'charge'
     }
 
-    def __init__(self, client_id, client_secret, bearer_token=None):
+    def __init__(self, client_id, client_secret, staging=False):
         """
         `client_id`     str     Your Vogogo client ID
         `client_secret` str     Your Vogogo client secret
+        `staging`       str     If we should hit the staging endpoints
         """
         self.client_id = client_id
         self.client_secret = client_secret
 
-        if bearer_token:
-            self.set_bearer_token(bearer_token)
+        if staging:
+            self.url = 'https://staging.api.vogogo.com/v2/'
+        else:
+            self.url = 'https://api.vogogo.com/v2/'
 
     def set_bearer_token(self, bearer_token):
         self.bearer_token = bearer_token
