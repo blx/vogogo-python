@@ -51,7 +51,6 @@ class Client(object):
         return self.bearer_token
 
     @require_bearer_token
-    @property
     def bearer_headers(self):
         headers = {
             'Content-Type': 'application/json',
@@ -60,7 +59,6 @@ class Client(object):
 
         return headers
 
-    @property
     def token_headers(self):
         headers = {
             'Content-Type': 'application/json',
@@ -78,7 +76,7 @@ class Client(object):
         """
         
         url = urljoin(self.url, self.endpoints['customers'])
-        r = requests.post(url, data=json.dumps(customer), headers=self.token_headers)
+        r = requests.post(url, data=json.dumps(customer), headers=self.token_headers())
         return r.json()
 
     @require_bearer_token
@@ -88,7 +86,7 @@ class Client(object):
         """
 
         url = urljoin(self.url, self.endpoints['customer'])
-        r = requests.get(url, headers=self.bearer_headers)
+        r = requests.get(url, headers=self.bearer_headers())
         return r.json()
 
     @require_bearer_token
@@ -109,7 +107,7 @@ class Client(object):
         if auth_token:
             payload['auth_token'] = auth_token
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers)
+        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
         return r.json()
 
     @require_bearer_token
@@ -122,7 +120,7 @@ class Client(object):
             'amount': amount
         }
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers)
+        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
         return r.json()
 
     @require_bearer_token
@@ -143,7 +141,7 @@ class Client(object):
             'type': type
         }
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers)
+        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
         return r.json()
 
     @require_bearer_token
@@ -153,7 +151,7 @@ class Client(object):
         """
 
         url = urljoin(self.url, self.endpoints['accounts_by_currency']) % currency
-        r = requests.get(url, headers=self.bearer_headers)
+        r = requests.get(url, headers=self.bearer_headers())
         return r.json()
 
     @require_bearer_token
@@ -167,7 +165,7 @@ class Client(object):
         payload = {
             'wallet_id': wallet_id
         }
-        r = requests.get(url, data=json.dumps(payload), headers=self.bearer_headers)
+        r = requests.get(url, data=json.dumps(payload), headers=self.bearer_headers())
         return r.json()
 
     @require_bearer_token
@@ -187,7 +185,7 @@ class Client(object):
             'client_ipv4': client_ipv4
         }
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers)
+        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
         return r.json()
 
     @require_bearer_token
@@ -207,5 +205,5 @@ class Client(object):
             'client_ipv4': client_ipv4
         }
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers)
+        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
         return r.json()
