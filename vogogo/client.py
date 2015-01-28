@@ -19,18 +19,18 @@ class Client(object):
     See official documentation at: https://docs.vogogo.com/api
     """
 
-    url = 'https://api.vogogo.com/v2'  # Base API URL
+    url = 'https://staging.api.vogogo.com/v2/'  # Base API URL
 
     endpoints = {
-        'customers': '/customers',
-        'customer': '/customer',
-        'accounts': '/accounts',
-        'accounts_by_currency': '/accounts?currency=%s',
-        'verify': '/accounts/%s/verify',
-        'auth': '/accounts/auth',
-        'transactions': '/transactions',
-        'pay': '/pay',
-        'charge': '/charge'
+        'customers': 'customers',
+        'customer': 'customer',
+        'accounts': 'accounts',
+        'accounts_by_currency': 'accounts?currency=%s',
+        'verify': 'accounts/%s/verify',
+        'auth': 'accounts/auth',
+        'transactions': 'transactions',
+        'pay': 'pay',
+        'charge': 'charge'
     }
 
     def __init__(self, client_id, client_secret, bearer_token=None):
