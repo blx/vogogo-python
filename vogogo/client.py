@@ -1,4 +1,4 @@
-import json
+import simplejson
 from urlparse import urljoin
 import requests
 

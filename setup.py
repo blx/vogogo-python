@@ -23,7 +23,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     keywords='api, client, vogogo',
-    install_requires=['requests==2.2.1'],
+    install_requires=['requests==2.5.1', 'simplejson==3.6.5'],
     zip_safe=False,
     include_package_data=True,
 )
