@@ -31,19 +31,15 @@ class Client(object):
         'charge': 'charge'
     }
 
-    def __init__(self, client_id, client_secret, staging=False):
+    def __init__(self, client_id, client_secret, url):
         """
         `client_id`     str     Your Vogogo client ID
         `client_secret` str     Your Vogogo client secret
-        `staging`       str     If we should hit the staging endpoints
+        `url`           str     Vogogo api base endpoint
         """
         self.client_id = client_id
         self.client_secret = client_secret
-
-        if staging:
-            self.url = 'https://staging.api.vogogo.com/v2/'
-        else:
-            self.url = 'https://api.vogogo.com/v2/'
+        self.url = url
 
     def set_bearer_token(self, bearer_token):
         self.bearer_token = bearer_token
