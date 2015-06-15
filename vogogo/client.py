@@ -16,15 +16,15 @@ class Client(object):
     """
     Vogogo API client https://vogogo.com/
 
-    See official documentation at: https://docs.vogogo.com/api
+    See official documentation at: http://docs.vogogo.com/payment_api/v2 
     """
 
     endpoints = {
         'customers': 'customers',
         'customer': 'customer',
         'accounts': 'accounts',
-        'accounts_by_currency': 'accounts?currency=%s',
-        'verify': 'accounts/%s/verify',
+        'accounts_by_currency': 'accounts?currency={:s}',
+        'verify': 'accounts/{:s}/verify',
         'auth': 'accounts/auth',
         'transactions': 'transactions',
         'pay': 'pay',
@@ -33,36 +33,54 @@ class Client(object):
 
     def __init__(self, client_id, client_secret, url):
         """
-        `client_id`     str     Your Vogogo client ID
+        `client_id`     str     Your Vogogo client ID (NOTE: Unused)
         `client_secret` str     Your Vogogo client secret
         `url`           str     Vogogo api base endpoint
         """
         self.client_id = client_id
         self.client_secret = client_secret
         self.url = url
+        self.bearer_token = None
 
-    def set_bearer_token(self, bearer_token):
-        self.bearer_token = bearer_token
-
-    def get_bearer_token(self):
-        return self.bearer_token
+    #def set_bearer_token(self, bearer_token):
+    #    self.bearer_token = bearer_token
+    #
+    #def get_bearer_token(self):
+    #    return self.bearer_token
 
     @require_bearer_token
     def bearer_headers(self):
-        headers = {
+        return {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + str(self.bearer_token)
         }
 
-        return headers
-
     def token_headers(self):
-        headers = {
+        return {
             'Content-Type': 'application/json',
             'Authorization': 'Token token=' + str(self.client_secret)
         }
 
-        return headers
+    
+
+    def _request(self, reqfn, endpoint, params, headers=None, endpoint_params=None):
+        headers = headers or self.bearer_headers()
+
+        url = urljoin(self.url, self.endpoints[endpoint])
+        if endpoint_params:
+            url = url.format(*endpoint_params)
+
+        r = reqfn(url,
+                  data=json.dumps(params),
+                  headers=headers)
+        return r.json()
+
+    def _get_request(self, endpoint, params=None, headers=None, endpoint_params=None):
+        return _request(requests.get, endpoint, params, headers)
+
+    def _post_request(self, endpoint, params, headers=None, endpoint_params=None):
+        return _request(requests.post, endpoint, params, headers)
+
 
     # Endpoints
     def sign_up_customer(self, customer):
@@ -72,9 +90,7 @@ class Client(object):
         `customer`  dict    Customer attributes as required by vogogo
         """
         
-        url = urljoin(self.url, self.endpoints['customers'])
-        r = requests.post(url, data=json.dumps(customer), headers=self.token_headers())
-        return r.json()
+        return _post_request('customers', customer, headers=self.token_headers())
 
     @require_bearer_token
     def get_customer(self):
@@ -82,9 +98,7 @@ class Client(object):
         Retrieve customer information. Provide the customer token in the Authorization header
         """
 
-        url = urljoin(self.url, self.endpoints['customer'])
-        r = requests.get(url, headers=self.bearer_headers())
-        return r.json()
+        return _get_request('customer')
 
     @require_bearer_token
     def add_bank_account(self, name, routing, number, currency, auth_token=None):
@@ -93,7 +107,6 @@ class Client(object):
         A customer can have up to five accounts.
         """
 
-        url = urljoin(self.url, self.endpoints['accounts'])
         payload = {
             'name': name,
             'routing': routing,
@@ -104,21 +117,19 @@ class Client(object):
         if auth_token:
             payload['auth_token'] = auth_token
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
-        return r.json()
+        return _post_request('accounts', payload)
 
     @require_bearer_token
     def verify_micro_deposit(self, account_id, amount):
         """
         Verify the customer controls a bank account by providing the micro deposit amount
         """
-        url = urljoin(self.url, self.endpoints['verify']) % account_id
+
         payload = {
             'amount': amount
         }
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
-        return r.json()
+        return _post_request('verify', payload, endpoint_params=[account_id])
 
     @require_bearer_token
     def auth_bank_account(self, email, username, password, type):
@@ -130,7 +141,6 @@ class Client(object):
         The customer does not need to be verified yet.
         """
 
-        url = urljoin(self.url, self.endpoints['auth'])
         payload = {
             'email': email,
             'username': username,
@@ -138,8 +148,7 @@ class Client(object):
             'type': type
         }
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
-        return r.json()
+        return _post_request('auth', payload)
 
     @require_bearer_token
     def get_accounts(self, currency):
@@ -147,9 +156,7 @@ class Client(object):
         This endpoint can be used to get a list of a customer's wallet and bank accounts. A currency must be specified.
         """
 
-        url = urljoin(self.url, self.endpoints['accounts_by_currency']) % currency
-        r = requests.get(url, headers=self.bearer_headers())
-        return r.json()
+        return _get_request('accounts_by_currency', endpoint_params=[currency])
 
     @require_bearer_token
     def get_transactions(self, wallet_id):
@@ -158,12 +165,11 @@ class Client(object):
         A wallet_id must be specified.
         """
 
-        url = urljoin(self.url, self.endpoints['transactions'])
         payload = {
             'wallet_id': wallet_id
         }
-        r = requests.get(url, data=json.dumps(payload), headers=self.bearer_headers())
-        return r.json()
+
+        return _get_request('transactions', payload)
 
     @require_bearer_token
     def pay(self, id, account_id, amount, currency, client_ipv4):
@@ -173,7 +179,6 @@ class Client(object):
         (wallet or bank account).
         """
 
-        url = urljoin(self.url, self.endpoints['pay'])
         payload = {
             'id': id,
             'account_id': account_id,
@@ -182,8 +187,7 @@ class Client(object):
             'client_ipv4': client_ipv4
         }
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
-        return r.json()
+        return _post_request('pay', payload)
 
     @require_bearer_token
     def charge(self, id, account_id, amount, currency, client_ipv4):
@@ -193,7 +197,6 @@ class Client(object):
         (wallet or bank account) to your merchant wallet.
         """
 
-        url = urljoin(self.url, self.endpoints['charge'])
         payload = {
             'id': id,
             'account_id': account_id,
@@ -202,5 +205,4 @@ class Client(object):
             'client_ipv4': client_ipv4
         }
 
-        r = requests.post(url, data=json.dumps(payload), headers=self.bearer_headers())
-        return r.json()
+        return _post_request('charge', payload)
