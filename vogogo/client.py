@@ -42,12 +42,6 @@ class Client(object):
         self.url = url
         self.bearer_token = None
 
-    #def set_bearer_token(self, bearer_token):
-    #    self.bearer_token = bearer_token
-    #
-    #def get_bearer_token(self):
-    #    return self.bearer_token
-
     @require_bearer_token
     def bearer_headers(self):
         return {
