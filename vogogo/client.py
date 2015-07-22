@@ -1,35 +1,23 @@
+# python3
+from functools import partialmethod
+
 import simplejson as json
 from urlparse import urljoin
 import requests
+from requests.auth import HTTPBasicAuth
 
+# Usage
+# 
+# vogogo = Client(None, 'asdsdg34wesdga', 'https://api.vogogo.com/v3/')
+# vogogo.customer('msdgn9123mas').charge_bank_account(...)
+# ...
 
-def require_bearer_token(func):
-    def inner_func(self, *args, **kwargs):
-        if not self.bearer_token:
-            raise Exception('`%s` method requires `bearer_token`' %
-                            func.__name__)
-        return func(self, *args, **kwargs)
-    return inner_func
-
-
-class Client(object):
+class Client:
     """
     Vogogo API client https://vogogo.com/
 
-    See official documentation at: http://docs.vogogo.com/payment_api/v2 
+    See official documentation at: http://docs.vogogo.com/payment_api/v3
     """
-
-    endpoints = {
-        'customers': 'customers',
-        'customer': 'customer',
-        'accounts': 'accounts',
-        'accounts_by_currency': 'accounts?currency={:s}',
-        'verify': 'accounts/{:s}/verify',
-        'auth': 'accounts/auth',
-        'transactions': 'transactions',
-        'pay': 'pay',
-        'charge': 'charge'
-    }
 
     def __init__(self, client_id, client_secret, url):
         """
@@ -40,40 +28,33 @@ class Client(object):
         self.client_id = client_id
         self.client_secret = client_secret
         self.url = url
-        self.bearer_token = None
 
-    @require_bearer_token
-    def bearer_headers(self):
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + str(self.bearer_token)
+        self.auth = HTTPBasicAuth(client_secret, '')
+        self.headers = {
+            'Content-Type': 'application/json'
         }
-
-    def token_headers(self):
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': 'Token token=' + str(self.client_secret)
-        }
-
     
 
-    def _request(self, reqfn, endpoint, params, headers=None, endpoint_params=None):
-        headers = headers or self.bearer_headers()
+    def _request(self, verb, path, data, headers=None, params=None):
+        if not self.client_auth:
+            raise Exception('Authentication required before making any requests.')
 
-        url = urljoin(self.url, self.endpoints[endpoint])
-        if endpoint_params:
-            url = url.format(*endpoint_params)
+        headers = headers or self.headers
+        params = params or {}
 
-        r = reqfn(url,
-                  data=json.dumps(params),
-                  headers=headers)
-        return r.json()
+        url = urljoin(self.url, path)
 
-    def _get_request(self, endpoint, params=None, headers=None, endpoint_params=None):
-        return _request(requests.get, endpoint, params, headers)
+        reqfn = getattr(requests, verb.lower())
+        return reqfn(url,
+                     params=params,
+                     data=json.dumps(data),
+                     headers=headers,
+                     auth=self.auth).json()
 
-    def _post_request(self, endpoint, params, headers=None, endpoint_params=None):
-        return _request(requests.post, endpoint, params, headers)
+
+    # Convenience method for chaining
+    def customer(self, customer_id):
+        return Customer(self, customer_id)
 
 
     # Endpoints
@@ -84,119 +65,108 @@ class Client(object):
         `customer`  dict    Customer attributes as required by vogogo
         """
         
-        return _post_request('customers', customer, headers=self.token_headers())
+        return _request('post', 'customers', data=customer)
 
-    @require_bearer_token
-    def get_customer(self):
-        """
-        Retrieve customer information. Provide the customer token in the Authorization header
-        """
 
-        return _get_request('customer')
+    def list_customers(self, params=None):
+        return _request('get', 'customers', params=params)
 
-    @require_bearer_token
-    def add_bank_account(self, name, routing, number, currency, auth_token=None):
-        """
-        Adds a bank account to an existing customer. The customer does not need to be verified yet.
-        A customer can have up to five accounts.
-        """
 
-        payload = {
-            'name': name,
-            'routing': routing,
-            'number': number,
-            'currency': currency
-        }
+    def list_industry_types(self):
+        return _request('get', 'industry_types')
 
-        if auth_token:
-            payload['auth_token'] = auth_token
+    def list_occupations(self):
+        return _request('get', 'occupations')
 
-        return _post_request('accounts', payload)
 
-    @require_bearer_token
-    def verify_micro_deposit(self, account_id, amount):
-        """
-        Verify the customer controls a bank account by providing the micro deposit amount
-        """
 
-        payload = {
-            'amount': amount
-        }
+class Customer(object):
+    def __init__(self, client, customer_id):
+        self.client = client
+        self.id = customer_id
 
-        return _post_request('verify', payload, endpoint_params=[account_id])
+    def _request(self, verb, path, *args, **kwargs):
+        path = ('customers', self.id) + (path or ())
+        path = '/'.join(map(str, path))
+        return client._request(verb, path, *args, **kwargs)
 
-    @require_bearer_token
-    def auth_bank_account(self, email, username, password, type):
-        """
-        Retrieve the customer's bank accounts by querying their online banking service with their online banking credentials.
-        The results can be used to add a bank account with the Add Bank Account endpoint.
-        Accounts added this way bypass the need to perform and wait for a micro-deposit.
-        The customer's banking credentials are never stored.
-        The customer does not need to be verified yet.
-        """
+    _get = partialmethod(_request, 'get')
+    _post = partialmethod(_request, 'post')
+    _patch = partialmethod(_request, 'patch')
+    _delete = partialmethod(_request, 'delete')
 
-        payload = {
-            'email': email,
-            'username': username,
-            'password': password,
-            'type': type
-        }
 
-        return _post_request('auth', payload)
+    def get(self):
+        return self._get(path='')
 
-    @require_bearer_token
-    def get_accounts(self, currency):
-        """
-        This endpoint can be used to get a list of a customer's wallet and bank accounts. A currency must be specified.
-        """
+    def update(self, data):
+        return self._patch(path='',
+                           data=data)
 
-        return _get_request('accounts_by_currency', endpoint_params=[currency])
 
-    @require_bearer_token
-    def get_transactions(self, wallet_id):
-        """
-        This endpoint can be used to get a list of a customer's transactions that are attached to a particular wallet.
-        A wallet_id must be specified.
-        """
+    def create_bank_account(self, data):
+        return self._post(('bank_accounts'),
+                          data=data)
 
-        payload = {
-            'wallet_id': wallet_id
-        }
+    def verify_micro_deposit(self, account_id, data):
+        return self._post(('bank_accounts', account_id, 'micro_verifications'),
+                          data=data)
 
-        return _get_request('transactions', payload)
+    def delete_bank_acount(self, account_id):
+        return self._delete(('bank_accounts', account_id))
 
-    @require_bearer_token
-    def pay(self, id, account_id, amount, currency, client_ipv4):
-        """
-        Pay a customer.
-        This initiates a financial transaction to move funds from your merchant wallet to a customer's account
-        (wallet or bank account).
-        """
 
-        payload = {
-            'id': id,
-            'account_id': account_id,
-            'amount': amount,
-            'currency': currency,
-            'client_ipv4': client_ipv4
-        }
+    def get_account(self, account_id):
+        return self._get(('accounts', account_id))
 
-        return _post_request('pay', payload)
+    def list_accounts(self):
+        return self._get(('accounts'))
 
-    @require_bearer_token
-    def charge(self, id, account_id, amount, currency, client_ipv4):
-        """
-        Charge a customer.
-        This initiates a financial transaction to move funds from a customer's account
-        (wallet or bank account) to your merchant wallet.
-        """
 
-        payload = {
-            'id': id,
-            'account_id': account_id,
-            'amount': amount,
-            'currency': currency,
-            'client_ipv4': client_ipv4
-        }
+    def charge_bank_account(self, data):
+        return self._post(('bank'),
+                          data=data)
 
-        return _post_request('charge', payload)
+    def pay_bank_account(self, data):
+        return self._post(('bank'),
+                          data=data)
+
+    def get_bank_transaction(self, transaction_id):
+        return self._get(('bank',
+                         transaction_id))
+
+    def list_bank_transactions(self, params=None):
+        return self._get(('bank'),
+                         params=params)
+
+
+    def charge_card(self, data):
+        return self._post(('card'),
+                          data=data)
+
+    def get_card_transaction(self, transaction_id):
+        return self._get(('card', transaction_id))
+
+    def list_card_transactions(self, params=None):
+        return self._get(('card'),
+                         params=params)
+
+
+    def charge_interac(self, data):
+        return self._post(('interac'),
+                          data=data)
+
+    def get_interac_transaction(self, transaction_id):
+        return self._get(('interac', transaction_id))
+
+    def list_interac_transactions(self, params=None):
+        return self._get(('interac'),
+                         params=params)
+
+    
+    def get_transaction(self, transaction_id):
+        return self._get(('transactions', transaction_id))
+
+    def list_transactions(self, params=None):
+        return self._get(('transactions'),
+                         params=params)
