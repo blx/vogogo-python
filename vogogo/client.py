@@ -1,18 +1,35 @@
-# python3
-from functools import partialmethod
-
-import simplejson as json
-from urlparse import urljoin
-import requests
-from requests.auth import HTTPBasicAuth
-
 # Usage
 # 
 # vogogo = Client(None, 'asdsdg34wesdga', 'https://api.vogogo.com/v3/')
 # vogogo.customer('msdgn9123mas').charge_bank_account(...)
 # ...
 
-class Client:
+
+# Python3 / Python2
+try:
+    from functools import partialmethod
+except ImportError:
+    from .partialmethod import partialmethod
+
+# Python3 / Python2
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
+
+# 3rd party library
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
+import requests
+from requests.auth import HTTPBasicAuth
+
+
+API_V3 = 'https://api.vogogo.com/v3/'
+
+class Client(object):
     """
     Vogogo API client https://vogogo.com/
 
@@ -21,7 +38,6 @@ class Client:
 
     def __init__(self, client_id, client_secret, url):
         """
-        `client_id`     str     Your Vogogo client ID (NOTE: Unused)
         `client_secret` str     Your Vogogo client secret
         `url`           str     Vogogo api base endpoint
         """
@@ -35,8 +51,8 @@ class Client:
         }
     
 
-    def _request(self, verb, path, data, headers=None, params=None):
-        if not self.client_auth:
+    def _request(self, verb, path, data=None, headers=None, params=None):
+        if not self.auth:
             raise Exception('Authentication required before making any requests.')
 
         headers = headers or self.headers
@@ -65,18 +81,18 @@ class Client:
         `customer`  dict    Customer attributes as required by vogogo
         """
         
-        return _request('post', 'customers', data=customer)
+        return self._request('post', 'customers', data=customer)
 
 
     def list_customers(self, params=None):
-        return _request('get', 'customers', params=params)
+        return self._request('get', 'customers', params=params)
 
 
     def list_industry_types(self):
-        return _request('get', 'industry_types')
+        return self._request('get', 'industry_types')
 
     def list_occupations(self):
-        return _request('get', 'occupations')
+        return self._request('get', 'occupations')
 
 
 

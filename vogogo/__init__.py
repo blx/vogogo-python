@@ -1,1 +1,1 @@
-from client import Client, require_bearer_token
+from .client import Client, API_V3
