@@ -1,6 +1,6 @@
 # Usage
 # 
-# vogogo = Client(None, 'asdsdg34wesdga', 'https://api.vogogo.com/v3/')
+# vogogo = Client('asdsdg34wesdga', 'https://api.vogogo.com/v3/')
 # vogogo.customer('msdgn9123mas').charge_bank_account(...)
 # ...
 
@@ -36,12 +36,11 @@ class Client(object):
     See official documentation at: http://docs.vogogo.com/payment_api/v3
     """
 
-    def __init__(self, client_id, client_secret, url):
+    def __init__(self, client_secret, url):
         """
         `client_secret` str     Your Vogogo client secret
         `url`           str     Vogogo api base endpoint
         """
-        self.client_id = client_id
         self.client_secret = client_secret
         self.url = url
 
