@@ -4,6 +4,7 @@
 # vogogo.customer('msdgn9123mas').charge_bank_account(...)
 # ...
 
+from __future__ import print_function
 
 # Python3 / Python2
 try:
@@ -26,6 +27,8 @@ except ImportError:
 import requests
 from requests.auth import HTTPBasicAuth
 
+# Provide function for verbose logging output, or None/False to silence.
+verbose = print
 
 API_V3 = 'https://api.vogogo.com/v3/'
 API_V3_STAGING = 'https://staging.api.vogogo.com/v3/'
@@ -59,6 +62,9 @@ class Client(object):
         params = params or {}
 
         url = urljoin(self.url, path)
+
+        if verbose:
+            verbose("[vogogo] {v} {p} data={d}\n".format(v=verb.upper(), p=path, d=data))
 
         reqfn = getattr(requests, verb.lower())
         return reqfn(url,
