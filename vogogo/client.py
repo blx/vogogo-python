@@ -102,9 +102,9 @@ class Customer(object):
         self.id = customer_id
 
     def _request(self, verb, path, *args, **kwargs):
-        path = ('customers', self.id) + (path or ())
+        path = ['customers', self.id] + (path or [])
         path = '/'.join(map(str, path))
-        return client._request(verb, path, *args, **kwargs)
+        return self.client._request(verb, path, *args, **kwargs)
 
     _get = partialmethod(_request, 'get')
     _post = partialmethod(_request, 'post')
@@ -121,68 +121,68 @@ class Customer(object):
 
 
     def create_bank_account(self, data):
-        return self._post(('bank_accounts'),
+        return self._post(['bank_accounts'],
                           data=data)
 
     def verify_micro_deposit(self, account_id, data):
-        return self._post(('bank_accounts', account_id, 'micro_verifications'),
+        return self._post(['bank_accounts', account_id, 'micro_verifications'],
                           data=data)
 
     def delete_bank_acount(self, account_id):
-        return self._delete(('bank_accounts', account_id))
+        return self._delete(['bank_accounts', account_id])
 
 
     def get_account(self, account_id):
-        return self._get(('accounts', account_id))
+        return self._get(['accounts', account_id])
 
     def list_accounts(self):
-        return self._get(('accounts'))
+        return self._get(['accounts'])
 
 
     def charge_bank_account(self, data):
-        return self._post(('bank'),
+        return self._post(['bank'],
                           data=data)
 
     def pay_bank_account(self, data):
-        return self._post(('bank'),
+        return self._post(['bank'],
                           data=data)
 
     def get_bank_transaction(self, transaction_id):
-        return self._get(('bank',
-                         transaction_id))
+        return self._get(['bank',
+                         transaction_id])
 
     def list_bank_transactions(self, params=None):
-        return self._get(('bank'),
+        return self._get(['bank'],
                          params=params)
 
 
     def charge_card(self, data):
-        return self._post(('card'),
+        return self._post(['card'],
                           data=data)
 
     def get_card_transaction(self, transaction_id):
-        return self._get(('card', transaction_id))
+        return self._get(['card', transaction_id])
 
     def list_card_transactions(self, params=None):
-        return self._get(('card'),
+        return self._get(['card'],
                          params=params)
 
 
     def charge_interac(self, data):
-        return self._post(('interac'),
+        return self._post(['interac'],
                           data=data)
 
     def get_interac_transaction(self, transaction_id):
-        return self._get(('interac', transaction_id))
+        return self._get(['interac', transaction_id])
 
     def list_interac_transactions(self, params=None):
-        return self._get(('interac'),
+        return self._get(['interac'],
                          params=params)
 
     
     def get_transaction(self, transaction_id):
-        return self._get(('transactions', transaction_id))
+        return self._get(['transactions', transaction_id])
 
     def list_transactions(self, params=None):
-        return self._get(('transactions'),
+        return self._get(['transactions'],
                          params=params)
