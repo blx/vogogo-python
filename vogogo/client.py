@@ -28,6 +28,7 @@ from requests.auth import HTTPBasicAuth
 
 
 API_V3 = 'https://api.vogogo.com/v3/'
+API_V3_STAGING = 'https://staging.api.vogogo.com/v3/'
 
 class Client(object):
     """
