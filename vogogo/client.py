@@ -64,7 +64,7 @@ class Client(object):
         url = urljoin(self.url, path)
 
         if verbose:
-            verbose("[vogogo] {v} {p} data={d}\n".format(v=verb.upper(), p=path, d=data))
+            verbose("[vogogo] {v} {u} data={d}\n".format(v=verb.upper(), u=url, d=data))
 
         reqfn = getattr(requests, verb.lower())
         return reqfn(url,
